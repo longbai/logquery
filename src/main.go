@@ -19,8 +19,8 @@ type Conf struct {
 	Sk string `json:"sk"`
 
 	Size   int    `json:"size"`
-	Fields string `json:"fields"`
 	Repo   string `json:"repo"`
+	Fields string `json:"fields"`
 }
 
 var conf Conf
@@ -39,7 +39,7 @@ func main() {
 	var endTime int64
 	var query string
 	var outputPath string
-	flag.StringVar(&confPath, "c", "conf.json", "conf.json path")
+	flag.StringVar(&confPath, "c", "search.conf", "conf.json path")
 	flag.IntVar(&duration, "d", 15, "time duration, minute")
 	flag.StringVar(&query, "q", "*", "query string")
 	flag.Int64Var(&endTime, "t", time.Now().Unix(), "end time")
@@ -50,6 +50,9 @@ func main() {
 	if err != nil {
 		log.Fatalln("load config failed ", err)
 		return
+	}
+	if conf.Size == 0 {
+		conf.Size = 100
 	}
 
 	Query(query, duration, endTime, outputPath)
@@ -80,7 +83,6 @@ func Query(q string, duration int, endTime int64, output string) {
 	input.Start = end.Add(-time.Duration(duration) * time.Minute)
 	input.End = end
 	input.Fields = conf.Fields
-
 	client := newLogdbClient()
 	id, err := client.QueryAnalysisLogJob(&input)
 	if err != nil {
@@ -90,6 +92,7 @@ func Query(q string, duration int, endTime int64, output string) {
 
 	var data []map[string]interface{} = make([]map[string]interface{}, 0)
 	partial := true
+	log.Println(id)
 	for partial == true {
 		output, err := client.QueryAnalysisLog(id)
 		partial = output.PartialSuccess
@@ -112,5 +115,4 @@ func Query(q string, duration int, endTime int64, output string) {
 	} else {
 		log.Println(string(b))
 	}
-
 }

@@ -593,14 +593,17 @@ func (input *QueryAnalysisLogInput) Buf() (buf []byte, err error) {
 				"query": input.Query,
 			},
 		},
-		"_source": strings.Split(input.Fields, ","),
-		"size":    input.Size,
+	}
+	if input.Fields != "" {
+		data["_source"] = strings.Split(input.Fields, ",")
+	}
+	if input.Size != 0 {
+		data["size"] = input.Size
 	}
 	buf, err = json.Marshal(data)
 	if err != nil {
 		return
 	}
-	fmt.Println("body", string(buf))
 	return
 }
 
