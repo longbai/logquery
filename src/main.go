@@ -1,12 +1,16 @@
 package main
 
 import (
+	"encoding/csv"
 	"encoding/json"
 	"flag"
-	// "fmt"
+	"fmt"
+	"strconv"
+	// "io"
 	"io/ioutil"
 	"log"
 	"os"
+	"sort"
 	"time"
 
 	"github.com/qiniu/pandora-go-sdk/base"
@@ -21,6 +25,7 @@ type Conf struct {
 	Size   int    `json:"size"`
 	Repo   string `json:"repo"`
 	Fields string `json:"fields"`
+	Step   int    `json:"step"`
 }
 
 var conf Conf
@@ -43,7 +48,7 @@ func main() {
 	flag.IntVar(&duration, "d", 15, "time duration, minute")
 	flag.StringVar(&query, "q", "*", "query string")
 	flag.Int64Var(&endTime, "t", time.Now().Unix(), "end time")
-	flag.StringVar(&outputPath, "o", "", "output path")
+	flag.StringVar(&outputPath, "o", "output-"+strconv.FormatInt(int64(os.Getegid()), 10)+".log", "output path")
 	flag.Parse()
 
 	err := SetupConfiguration(confPath)
@@ -55,7 +60,15 @@ func main() {
 		conf.Size = 100
 	}
 
-	Query(query, duration, endTime, outputPath)
+	f, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		log.Println(err)
+	}
+	writer := csv.NewWriter(f)
+
+	Query(query, duration, endTime, writer, true)
+
+	f.Close()
 }
 
 func newLogdbClient() logdb.LogdbAPI {
@@ -73,13 +86,35 @@ func newLogdbClient() logdb.LogdbAPI {
 	return client
 }
 
-func Query(q string, duration int, endTime int64, output string) {
+func parseTitle(prefix string, data map[string]interface{}) (titles []string) {
+	for key, value := range data {
+		if v, ok := value.(map[string]interface{}); ok {
+			titles = append(titles, parseTitle(prefix+key+".", v)...)
+		} else {
+			titles = append(titles, prefix+key)
+		}
+	}
+	return
+}
+
+func parseValue(index map[string]int, prefix string, values []string, data map[string]interface{}) {
+	for key, value := range data {
+		if v, ok := value.(map[string]interface{}); ok {
+			parseValue(index, prefix+key+".", values, v)
+		} else {
+			values[index[prefix+key]] = fmt.Sprintf("%v", value)
+		}
+	}
+	return
+}
+
+func Query(q string, duration int, endTime int64, writer *csv.Writer, first bool) {
 	var input logdb.QueryAnalysisLogInput
 	input.RepoName = conf.Repo
 	input.Query = q
 
 	end := time.Unix(endTime, 0)
-	input.Size = conf.Size
+	// input.Size = conf.Size
 	input.Start = end.Add(-time.Duration(duration) * time.Minute)
 	input.End = end
 	input.Fields = conf.Fields
@@ -96,6 +131,7 @@ func Query(q string, duration int, endTime int64, output string) {
 	for partial == true {
 		output, err := client.QueryAnalysisLog(id)
 		partial = output.PartialSuccess
+
 		if err != nil {
 			log.Println(err.Error())
 			return
@@ -104,15 +140,22 @@ func Query(q string, duration int, endTime int64, output string) {
 			data = append(data, v.Data)
 		}
 	}
-	b, err := json.MarshalIndent(data, "", "  ")
-	if err != nil {
-		log.Println(err.Error())
+
+	if len(data) == 0 {
 		return
 	}
-	if output != "" {
-		ioutil.WriteFile(output, b, os.ModePerm)
-		return
-	} else {
-		log.Println(string(b))
+	titles := parseTitle("", data[0])
+	sort.Strings(titles)
+	indexes := make(map[string]int)
+	for k, v := range titles {
+		indexes[v] = k
+	}
+	if first {
+		writer.Write(parseTitle("", data[0]))
+	}
+	for _, v := range data {
+		values := make([]string, len(indexes))
+		parseValue(indexes, "", values, v)
+		writer.Write(values)
 	}
 }
