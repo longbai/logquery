@@ -171,7 +171,7 @@ func Query(q string, startTime int64, endTime int64, writer *csv.Writer, first b
 		indexes[v] = k
 	}
 	if first {
-		writer.Write(parseTitle("", data[0]))
+		writer.Write(titles)
 	}
 	for _, v := range data {
 		values := make([]string, len(indexes))
