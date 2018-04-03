@@ -61,7 +61,7 @@ func NewDefaultLogger() *DefaultLogger {
 type DefaultLogger struct {
 	*log.Logger
 	level LogLevelType
-	rwMu *sync.RWMutex
+	rwMu  *sync.RWMutex
 }
 
 func (l *DefaultLogger) LogLevel() LogLevelType {

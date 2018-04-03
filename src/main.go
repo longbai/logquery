@@ -25,7 +25,7 @@ type Conf struct {
 	Size   int    `json:"size"`
 	Repo   string `json:"repo"`
 	Fields string `json:"fields"`
-	Step   int    `json:"step"`
+	Step   int64  `json:"step"`
 }
 
 var conf Conf
@@ -38,14 +38,22 @@ func SetupConfiguration(path string) error {
 	return json.Unmarshal(raw, &conf)
 }
 
+func getEnd(startPos, endTime int64) int64 {
+	e1 := startPos + conf.Step*int64(60)
+	if e1 < endTime {
+		return e1
+	}
+	return endTime
+}
+
 func main() {
 	var confPath string
-	var duration int
+	var duration int64
 	var endTime int64
 	var query string
 	var outputPath string
 	flag.StringVar(&confPath, "c", "search.conf", "conf.json path")
-	flag.IntVar(&duration, "d", 15, "time duration, minute")
+	flag.Int64Var(&duration, "d", 15, "time duration, minute")
 	flag.StringVar(&query, "q", "*", "query string")
 	flag.Int64Var(&endTime, "t", time.Now().Unix(), "end time")
 	flag.StringVar(&outputPath, "o", "output-"+strconv.FormatInt(int64(os.Getegid()), 10)+".log", "output path")
@@ -59,14 +67,25 @@ func main() {
 	if conf.Size == 0 {
 		conf.Size = 100
 	}
+	if conf.Step == 0 {
+		conf.Step = 5
+	}
 
 	f, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
 	if err != nil {
 		log.Println(err)
 	}
 	writer := csv.NewWriter(f)
-
-	Query(query, duration, endTime, writer, true)
+	start := endTime - duration*int64(60)
+	startPos := start
+	for {
+		endPos := getEnd(startPos, endTime)
+		Query(query, startPos, endPos, writer, startPos == start)
+		startPos += conf.Step * 60
+		if startPos >= endTime {
+			break
+		}
+	}
 
 	f.Close()
 }
@@ -108,14 +127,15 @@ func parseValue(index map[string]int, prefix string, values []string, data map[s
 	return
 }
 
-func Query(q string, duration int, endTime int64, writer *csv.Writer, first bool) {
+func Query(q string, startTime int64, endTime int64, writer *csv.Writer, first bool) {
 	var input logdb.QueryAnalysisLogInput
 	input.RepoName = conf.Repo
 	input.Query = q
 
 	end := time.Unix(endTime, 0)
-	// input.Size = conf.Size
-	input.Start = end.Add(-time.Duration(duration) * time.Minute)
+	input.Size = conf.Size
+
+	input.Start = time.Unix(startTime, 0)
 	input.End = end
 	input.Fields = conf.Fields
 	client := newLogdbClient()
