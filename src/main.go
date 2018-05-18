@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/qiniu/pandora-go-sdk/base"
@@ -26,6 +27,7 @@ type Conf struct {
 	Repo   string `json:"repo"`
 	Fields string `json:"fields"`
 	Step   int64  `json:"step"`
+	Sort   string `json:"sort"`
 }
 
 var conf Conf
@@ -86,7 +88,7 @@ func main() {
 			break
 		}
 	}
-
+	writer.Flush()
 	f.Close()
 }
 
@@ -116,30 +118,45 @@ func parseTitle(prefix string, data map[string]interface{}) (titles []string) {
 	return
 }
 
+func trimTitle(fields string, titles []string) (ret []string) {
+	f := strings.Split(fields, ",")
+	for _, t := range titles {
+		for _, f2 := range f {
+			if f2 == t {
+				ret = append(ret, t)
+				break
+			}
+		}
+	}
+	return
+}
+
 func parseValue(index map[string]int, prefix string, values []string, data map[string]interface{}) {
 	for key, value := range data {
 		if v, ok := value.(map[string]interface{}); ok {
 			parseValue(index, prefix+key+".", values, v)
 		} else {
-			values[index[prefix+key]] = fmt.Sprintf("%v", value)
+			if pos, ok := index[prefix+key]; ok {
+				values[pos] = fmt.Sprintf("%v", value)
+			}
 		}
 	}
 	return
 }
 
 func Query(q string, startTime int64, endTime int64, writer *csv.Writer, first bool) {
-	var input logdb.QueryAnalysisLogInput
+	var input logdb.QuerySearchLogInput
 	input.RepoName = conf.Repo
 	input.Query = q
 
 	end := time.Unix(endTime, 0)
-	input.Size = conf.Size
 
 	input.Start = time.Unix(startTime, 0)
 	input.End = end
-	input.Fields = conf.Fields
+	// input.Fields = conf.Fields
+	input.Sort = conf.Sort
 	client := newLogdbClient()
-	id, err := client.QueryAnalysisLogJob(&input)
+	id, err := client.QuerySearchLogJob(&input)
 	if err != nil {
 		log.Println(err.Error())
 		return
@@ -148,9 +165,12 @@ func Query(q string, startTime int64, endTime int64, writer *csv.Writer, first b
 	var data []map[string]interface{} = make([]map[string]interface{}, 0)
 	partial := true
 	log.Println(id)
-	for partial == true {
-		output, err := client.QueryAnalysisLog(id)
+	for partial {
+		output, err := client.QuerySearchLog(id)
 		partial = output.PartialSuccess
+		if partial {
+			continue
+		}
 
 		if err != nil {
 			log.Println(err.Error())
@@ -165,6 +185,7 @@ func Query(q string, startTime int64, endTime int64, writer *csv.Writer, first b
 		return
 	}
 	titles := parseTitle("", data[0])
+	titles = trimTitle(conf.Fields, titles)
 	sort.Strings(titles)
 	indexes := make(map[string]int)
 	for k, v := range titles {

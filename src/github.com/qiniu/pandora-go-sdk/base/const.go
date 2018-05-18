@@ -106,6 +106,8 @@ const (
 	OpSchemaRef         string = "SchemaRef"
 	OpAnalysisLogJob    string = "AnalysisLogJob"
 	OpAnalysisLog       string = "AnalysisLog"
+	OpSearchLogJob      string = "SearchLogJob"
+	OpSearchLog         string = "SearchLog"
 
 	OpUpdateRepoMetadata string = "UpdataRepoMetadata"
 	OpDeleteRepoMetadata string = "DeleteRepoMetadata"

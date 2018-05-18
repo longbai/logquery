@@ -573,6 +573,44 @@ type QueryLogInput struct {
 	Highlight *Highlight
 }
 
+type QuerySearchLogInput struct {
+	PandoraToken
+	Start    time.Time
+	End      time.Time
+	RepoName string
+	Query    string
+	Sort     string
+}
+
+// request body:
+// {
+//     "repos":["nest_1","nest_2"], //
+//     "startTime": 1516809600000,
+//     "endTime": 1517068800000,
+//     "queryString": "*", //
+//     "sortField": "time" // 排序字段
+// }
+// response body:
+// {
+//     "id": "AWJsyEHQjr3A4hSUjROj"
+// }
+
+func (input *QuerySearchLogInput) Buf() (buf []byte, err error) {
+	data := map[string]interface{}{
+		"repos":       []string{input.RepoName},
+		"startTime":   input.Start.Unix() * 1000,
+		"endTime":     input.End.Unix() * 1000,
+		"queryString": input.Query,
+		"sortField":   input.Sort,
+	}
+
+	buf, err = json.Marshal(data)
+	if err != nil {
+		return
+	}
+	return
+}
+
 type QueryAnalysisLogInput struct {
 	PandoraToken
 	Start    time.Time
@@ -588,10 +626,27 @@ type QueryAnalysisLogInput struct {
 
 func (input *QueryAnalysisLogInput) Buf() (buf []byte, err error) {
 	data := map[string]interface{}{
+		// 	"repos":        []string{input.RepoName},
+		// 	"startTime":    input.Start.Unix() * 1000,
+		// 	"endTime":      input.End.Unix() * 1000,
+		// 	"query_string": input.Query,
+		// 	"sortField":    input.Sort,
+		// }
+
 		"query": map[string]interface{}{
 			"query_string": map[string]string{
 				"query": input.Query,
 			},
+			// 	"bool": map[string]interface{}{
+			// 		"filter": []map[string]interface{}{{
+			// 			"range": map[string]interface{}{
+			// 				input.Sort: map[string]interface{}{
+			// 					"gte": input.Start,
+			// 					"lt":  input.End,
+			// 				},
+			// 			},
+			// 		}},
+			// 	},
 		},
 	}
 	if input.Fields != "" {
@@ -600,10 +655,17 @@ func (input *QueryAnalysisLogInput) Buf() (buf []byte, err error) {
 	if input.Size != 0 {
 		data["size"] = input.Size
 	}
+	if input.Sort != "" {
+		data["sort"] = map[string]interface{}{input.Sort: map[string]string{
+			"order": "desc",
+		},
+		}
+	}
 	buf, err = json.Marshal(data)
 	if err != nil {
 		return
 	}
+	fmt.Println("body", string(buf))
 	return
 }
 
@@ -627,6 +689,21 @@ type QueryLogOutput struct {
 	Total          int                      `json:"total"`
 	PartialSuccess bool                     `json:"partialSuccess"`
 	Data           []map[string]interface{} `json:"data"`
+}
+
+type QuerySearchLogHit struct {
+	IsFullText bool   `json:"isFullText,omitempty"`
+	Id         string `json:"id,omitempty"`
+	// Timestamp  time.Time              `json:"timestamp,omitempty"`
+	Data map[string]interface{} `json:"source,omitempty"`
+}
+
+type QuerySearchLogOutput struct {
+	Took           int                 `json:"took,omitempty"`
+	Process        float32             `json:"process,omitempty"`
+	Total          int                 `json:"total"`
+	PartialSuccess bool                `json:"partial_success"`
+	Hits           []QuerySearchLogHit `json:"hits"`
 }
 
 type QueryAnalysisLogHit struct {

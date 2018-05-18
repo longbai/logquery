@@ -141,6 +141,29 @@ func (c *Logdb) QueryAnalysisLogJob(input *QueryAnalysisLogInput) (jobId string,
 	return output.Id, req.Send()
 }
 
+func (c *Logdb) QuerySearchLog(jobId string) (output *QuerySearchLogOutput, err error) {
+	op := c.NewOperation(base.OpSearchLog, jobId)
+
+	output = &QuerySearchLogOutput{}
+	req := c.newRequest(op, "", output)
+	return output, req.Send()
+}
+
+func (c *Logdb) QuerySearchLogJob(input *QuerySearchLogInput) (jobId string, err error) {
+	op := c.NewOperation(base.OpSearchLogJob)
+
+	output := &job{}
+	req := c.newRequest(op, input.Token, output)
+
+	// req.SetHeader(base.HTTPHeaderContentType, base.ContentTypeJson)
+	buf, err := input.Buf()
+	if err != nil {
+		return
+	}
+	req.SetBufferBody(buf)
+	return output.Id, req.Send()
+}
+
 func (c *Logdb) QueryScroll(input *QueryScrollInput) (output *QueryLogOutput, err error) {
 	op := c.NewOperation(base.OpQueryScroll, input.RepoName)
 	output = &QueryLogOutput{}

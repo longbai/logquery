@@ -290,6 +290,7 @@ func (r *Request) Send() error {
 			r.HTTPResponse.StatusCode)
 		return r.Error
 	}
+
 	if r.HTTPResponse.StatusCode == 200 {
 		r.unmarshal(buf)
 	} else {

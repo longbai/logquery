@@ -89,6 +89,10 @@ func (c *Logdb) NewOperation(opName string, args ...interface{}) *request.Operat
 		method, urlTmpl = base.MethodPost, "/v5/repos/%s/s"
 	case base.OpSchemaRef:
 		method, urlTmpl = base.MethodPost, "/v5/schema/derivation"
+	case base.OpSearchLogJob:
+		method, urlTmpl = base.MethodPost, "/v5/job?type=search"
+	case base.OpSearchLog:
+		method, urlTmpl = base.MethodGet, "/v5/job/%s/events"
 	case base.OpAnalysisLogJob:
 		method, urlTmpl = base.MethodPost, "/v5/job?type=analysis&repos=%s&startTime=%d&endTime=%d"
 	case base.OpAnalysisLog:
