@@ -12,12 +12,12 @@ import (
 	"reflect"
 
 	"github.com/qiniu/log"
-	"github.com/qiniu/pandora-go-sdk/base"
-	"github.com/qiniu/pandora-go-sdk/base/models"
-	"github.com/qiniu/pandora-go-sdk/base/reqerr"
-	"github.com/qiniu/pandora-go-sdk/base/request"
-	"github.com/qiniu/pandora-go-sdk/logdb"
-	"github.com/qiniu/pandora-go-sdk/tsdb"
+	"github.com/longbai/logquery/pandora-go-sdk/base"
+	"github.com/longbai/logquery/pandora-go-sdk/base/models"
+	"github.com/longbai/logquery/pandora-go-sdk/base/reqerr"
+	"github.com/longbai/logquery/pandora-go-sdk/base/request"
+	"github.com/longbai/logquery/pandora-go-sdk/logdb"
+	"github.com/longbai/logquery/pandora-go-sdk/tsdb"
 )
 
 const (

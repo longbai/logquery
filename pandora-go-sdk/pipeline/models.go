@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/qiniu/pandora-go-sdk/base"
-	. "github.com/qiniu/pandora-go-sdk/base/models"
-	"github.com/qiniu/pandora-go-sdk/base/reqerr"
+	"github.com/longbai/logquery/pandora-go-sdk/base"
+	. "github.com/longbai/logquery/pandora-go-sdk/base/models"
+	"github.com/longbai/logquery/pandora-go-sdk/base/reqerr"
 )
 
 const (

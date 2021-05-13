@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/qiniu/pandora-go-sdk/base"
-	. "github.com/qiniu/pandora-go-sdk/base/models"
+	"github.com/longbai/logquery/pandora-go-sdk/base"
+	. "github.com/longbai/logquery/pandora-go-sdk/base/models"
 )
 
 func WaitWorkflowStarted(workflowName string, client PipelineAPI, logger base.Logger, getWStatusToken PandoraToken) (err error) {

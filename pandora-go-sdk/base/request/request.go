@@ -16,10 +16,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/qiniu/pandora-go-sdk/base"
-	"github.com/qiniu/pandora-go-sdk/base/config"
-	"github.com/qiniu/pandora-go-sdk/base/ratelimit"
-	"github.com/qiniu/pandora-go-sdk/base/reqerr"
+	"github.com/longbai/logquery/pandora-go-sdk/base"
+	"github.com/longbai/logquery/pandora-go-sdk/base/config"
+	"github.com/longbai/logquery/pandora-go-sdk/base/ratelimit"
+	"github.com/longbai/logquery/pandora-go-sdk/base/reqerr"
 )
 
 type Request struct {

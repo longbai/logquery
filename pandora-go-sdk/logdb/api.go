@@ -3,7 +3,7 @@ package logdb
 import (
 	"net/url"
 
-	"github.com/qiniu/pandora-go-sdk/base"
+	"github.com/longbai/logquery/pandora-go-sdk/base"
 )
 
 func (c *Logdb) CreateRepo(input *CreateRepoInput) (err error) {

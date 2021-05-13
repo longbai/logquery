@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/qiniu/log"
-	"github.com/qiniu/pandora-go-sdk/base"
-	"github.com/qiniu/pandora-go-sdk/base/reqerr"
-	"github.com/qiniu/pandora-go-sdk/logdb"
+	"github.com/longbai/logquery/pandora-go-sdk/base"
+	"github.com/longbai/logquery/pandora-go-sdk/base/reqerr"
+	"github.com/longbai/logquery/pandora-go-sdk/logdb"
 )
 
 func (c *Pipeline) FormExportInput(repoName, exportType string, spec interface{}) *CreateExportInput {

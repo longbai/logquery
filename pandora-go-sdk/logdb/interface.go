@@ -1,7 +1,7 @@
 package logdb
 
 import (
-	"github.com/qiniu/pandora-go-sdk/base"
+	"github.com/longbai/logquery/pandora-go-sdk/base"
 )
 
 type LogdbAPI interface {

@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"strconv"
-	// "io"
 	"io/ioutil"
 	"log"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
